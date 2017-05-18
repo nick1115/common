@@ -20,58 +20,42 @@
 #include <list>
 #include <mutex>
 
-#include "my_common_header.hpp"
-
 namespace my_module_space
 {
     template<typename T>
-    class has_clear_function
+    class ClearFunctionSensor
     {
     public:
-        template<typename U, void (U::*)()> class matcher;
-        template<typename U> static char helper(matcher<U, &U::clear>*);
+        template<typename U, void (U::*)()> class Matcher;
+        template<typename U> static char helper(Matcher<U, &U::clear>*);
         template<typename U> static int helper(...);
         enum { value = sizeof(helper<T>(nullptr)) == sizeof(char) };
     };
 
-    template <bool>
-    class clear_impl;
-
-    template<>
-    class clear_impl<true>
+    template <bool> class ClearImpl;
+    template<> class ClearImpl<true>
     {
     public:
-        template<typename T> inline static void clear(T &t) {t.clear();}
         template<typename T> inline static void clear(T *p_t) {p_t->clear();}
     };
-
-    template<>
-    class clear_impl<false>
+    template<> class ClearImpl<false>
     {
     public:
-        template<typename T> inline static void clear(T &t){}
         template<typename T> inline static void clear(T *p_t) {}
     };
 
-    template<typename T>
-    inline void clear_object(T &t)
+    template<typename T> inline void clear_object(T *p_t)
     {
-        clear_impl<has_clear_function<T>::value>::clear(t);
-    }
-
-    template<typename T>
-    inline void clear_object(T *p_t)
-    {
-        clear_impl<has_clear_function<T>::value>::clear(p_t);
+        ClearImpl<ClearFunctionSensor<T>::value>::clear(p_t);
     }
 
     template <typename T>
-    class object_pool
+    class ObjectPool
     {
     public:
-        object_pool() : m_max_holding_count(8) {} /// < default max holding count is 8
+        ObjectPool() : m_max_holding_count(8) {} /// < default max holding count is 8
 
-        ~object_pool()
+        ~ObjectPool()
         {
             m_lock.lock();
             typename std::list<T*>::iterator itr = m_obj_list.begin();
@@ -85,9 +69,9 @@ namespace my_module_space
         }
 
     private:
-        object_pool(const object_pool&) = delete;
-        object_pool(object_pool&&) = delete;
-        object_pool& operator=(const object_pool&) = delete;
+        ObjectPool(const ObjectPool&) = delete;
+        ObjectPool(ObjectPool&&) = delete;
+        ObjectPool& operator=(const ObjectPool&) = delete;
 
     private:
         std::list<T*> m_obj_list;
@@ -125,7 +109,7 @@ namespace my_module_space
 
             if (static_cast<int>(m_obj_list.size()) < m_max_holding_count)
             {
-                clear_object(p_obj); /// < using the god like template meta programming
+                clear_object(p_obj); /// < using the fucking template meta programming
                 m_obj_list.push_back(p_obj);
             }
             else
@@ -157,13 +141,13 @@ namespace my_module_space
 
     /// < 请在CPP文件中定义此宏 
 #define DEFINE_OBJECT_POOL(OBJECT_TYPE,POOL_NAME) class POOL_NAME {\
-private:static my_module_space::object_pool<OBJECT_TYPE> m_pool;\
+private:static my_module_space::ObjectPool<OBJECT_TYPE> m_pool;\
 public:static OBJECT_TYPE* pop() { return m_pool.pop(); }\
 public:static void push(OBJECT_TYPE *p_obj) { m_pool.push(p_obj); }\
 public:static std::shared_ptr<OBJECT_TYPE> pop_sp() { return std::shared_ptr<OBJECT_TYPE>(pop(), push);}\
 public:static int get_max_holding_count() { return m_pool.get_max_holding_count(); }\
 public:static void set_max_holding_count(const int _count) { m_pool.set_max_holding_count(_count);}};\
-my_module_space::object_pool<OBJECT_TYPE> POOL_NAME::m_pool;
+my_module_space::ObjectPool<OBJECT_TYPE> POOL_NAME::m_pool;
 
 }
 

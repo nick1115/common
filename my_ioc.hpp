@@ -25,16 +25,16 @@
 
 namespace my_module_space
 {
-    class ioc
+    class IoC
     {
     public:
-        ioc() {}
-        ~ioc() {}
+        IoC() {}
+        ~IoC() {}
 
     private:
-        ioc(const ioc&) = delete;
-        ioc(ioc&&) = delete;
-        ioc& operator=(const ioc&) = delete;
+        IoC(const IoC&) = delete;
+        IoC(IoC&&) = delete;
+        IoC& operator=(const IoC&) = delete;
 
     public:
         /// < 注册代理关系 
@@ -128,20 +128,20 @@ namespace my_module_space
         }
 
     private:
-        bool register_type(const std::string &name_key, any_type _constructor)
+        bool register_type(const std::string &name_key, AnyType constructor)
         {
             if (m_constructor_map.find(name_key) != m_constructor_map.end())
             {
                 return false;
             }
 
-            m_constructor_map.emplace(name_key, _constructor);
+            m_constructor_map.emplace(name_key, constructor);
 
             return true;
         }
 
     private:
-        std::map<std::string, any_type> m_constructor_map;
+        std::map<std::string, AnyType> m_constructor_map;
     };
 }
 

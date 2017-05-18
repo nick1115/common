@@ -20,11 +20,16 @@
 
 namespace my_module_space
 {
-    class timer
+    class Timer
     {
     public:
-        timer() : m_begin(std::chrono::high_resolution_clock::now()) {}
-        ~timer() {}
+        Timer() : m_begin(std::chrono::high_resolution_clock::now()) {}
+        ~Timer() {}
+
+    private:
+        Timer(const Timer&) = delete;
+        Timer(Timer&&) = delete;
+        Timer operator=(const Timer&) = delete;
 
     public:
         void reset()
@@ -55,8 +60,6 @@ namespace my_module_space
     private:
         std::chrono::time_point<std::chrono::high_resolution_clock> m_begin;
     };
-
-
 }
 
 #endif

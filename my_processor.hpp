@@ -31,12 +31,12 @@ namespace my_module_space
     #define thread_sleep_us(us) std::this_thread::sleep_for(std::chrono::microseconds(us))
     #define thread_sleep_ns(ns) std::this_thread::sleep_for(std::chrono::nanoseconds(ns))
 
-    class thread_wrapper
+    class ThreadWrapper
     {
-        template<typename T> friend class processor;
+        template<typename T> friend class Processor;
     public:
-        thread_wrapper() : m_sp_thread(nullptr), m_init_flag(0), m_quit_flag(0) {}
-        ~thread_wrapper()
+        ThreadWrapper() : m_sp_thread(nullptr), m_init_flag(0), m_quit_flag(0) {}
+        ~ThreadWrapper()
         {
             /// < 线程信息类析构前，用户应停止线程，这里的代码是为异常情况准备的 
             if (m_sp_thread != nullptr && m_sp_thread->joinable())
@@ -49,8 +49,8 @@ namespace my_module_space
         }
 
     private:
-        thread_wrapper(const thread_wrapper&) = delete;
-        thread_wrapper& operator=(const thread_wrapper&) = delete;
+        ThreadWrapper(const ThreadWrapper&) = delete;
+        ThreadWrapper& operator=(const ThreadWrapper&) = delete;
     
     private:
         std::shared_ptr<std::thread> m_sp_thread; /// < C++11线程类 
@@ -72,7 +72,7 @@ namespace my_module_space
         }
     };
 
-    using SP_THREAD_WRAPPER = std::shared_ptr<thread_wrapper>;
+    using SP_THREAD_WRAPPER = std::shared_ptr<ThreadWrapper>;
 
     enum
     {
@@ -84,28 +84,28 @@ namespace my_module_space
     };
 
     template<typename T>
-    class processor
+    class Processor
     {
         using TASK_FUNCTION = std::function<void(std::shared_ptr<T>&)>;
 
     public:
-        processor(TASK_FUNCTION f = nullptr, const int task_max_count = 1024, const int thread_max_count = 1024) : 
+        Processor(TASK_FUNCTION f = nullptr, const int task_max_count = 1024, const int thread_max_count = 1024) : 
             m_task_function(f),
             m_task_max_count(task_max_count),
             m_thread_max_count(thread_max_count)
         {
         }
 
-        ~processor() {end_all_threads();}
+        ~Processor() {end_all_threads();}
 
     private:
-        processor(const processor&) = delete;
-        processor& operator=(const processor&) = delete;
+        Processor(const Processor&) = delete;
+        Processor& operator=(const Processor&) = delete;
 
     private:
         std::list<std::shared_ptr<T> > m_task_list;
         std::mutex m_task_lock;
-        semphore m_task_semphore;
+        Semphore m_task_semphore;
         volatile int m_task_max_count;
 
         std::list<SP_THREAD_WRAPPER> m_thread_list;
@@ -114,7 +114,7 @@ namespace my_module_space
 
         TASK_FUNCTION m_task_function;
 
-        std::list<processor<T>*> m_next_processors;
+        std::list<Processor<T>*> m_next_processors;
 
     private:
         void remove_thread_wrapper(const SP_THREAD_WRAPPER &sp_thread_wrapper)
@@ -157,7 +157,7 @@ namespace my_module_space
             m_task_function = f;
         }
 
-        int add_next_processor(processor<T> *p_processor) /// < current, it's not thread safe 
+        int add_next_processor(Processor<T> *p_processor) /// < current, it's not thread safe 
         {
             if (p_processor == nullptr)
             {
@@ -178,7 +178,7 @@ namespace my_module_space
             return PROCESSOR_SUCCESS;
         }
 
-        int remove_next_processor(processor<T> *p_processor) /// < current, it's not thread safe 
+        int remove_next_processor(Processor<T> *p_processor) /// < current, it's not thread safe 
         {
             for (auto itr = m_next_processors.begin(); itr != m_next_processors.end(); ++itr)
             {
@@ -215,7 +215,7 @@ namespace my_module_space
 
                 try
                 {
-                    SP_THREAD_WRAPPER sp_thread_wrapper(std::make_shared<thread_wrapper>());
+                    SP_THREAD_WRAPPER sp_thread_wrapper(std::make_shared<ThreadWrapper>());
                     sp_thread_wrapper->m_sp_thread = std::make_shared<std::thread>([this](SP_THREAD_WRAPPER sp_thread_wrapper)->void
                     {
                         if (sp_thread_wrapper == nullptr)
@@ -232,7 +232,7 @@ namespace my_module_space
                         std::shared_ptr<T> sp_task(nullptr);
                         int result = 0;
 
-                        while (1)
+                        while (true)
                         {
                             result = get_task(sp_task, 200);
                             if (sp_thread_wrapper->is_thread_quit())

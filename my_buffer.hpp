@@ -17,25 +17,24 @@
 #define	__MY_BUFFER_HPP_BY_MOUYUN_2014_11_15__
 
 #include <string.h>
-#include "my_common_header.hpp"
 
 namespace my_module_space
 {
     /// < 缓存类 
-    class buffer
+    class Buffer
     {
     public:
         /** 
         * 默认构造函数 
         */ 
-        buffer() : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0) {}
+        Buffer() : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0) {}
 
         /** 
         * 自定义构造函数 
         * 
         * 参数： buffer_size [in] 缓存初始化大小 
         */ 
-        explicit buffer(const int buffer_size) : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0)
+        explicit Buffer(const int buffer_size) : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0)
         {
             if (buffer_size > 0)
             {
@@ -52,7 +51,7 @@ namespace my_module_space
         * 
         * 参数： p_str [in] C字符串指针 
         */ 
-        explicit buffer(const char *p_str) : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0)
+        explicit Buffer(const char *p_str) : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0)
         {
             if (p_str != nullptr)
             {
@@ -74,7 +73,7 @@ namespace my_module_space
         *       p_data [in] 外部数据指针 
         *       data_size [in] 外部数据大小 
         */ 
-        buffer(const void *p_data, const int data_size) : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0)
+        Buffer(const void *p_data, const int data_size) : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0)
         {
             if (p_data != nullptr && data_size > 0)
             {
@@ -95,7 +94,7 @@ namespace my_module_space
         * 
         * 备注： 深拷贝，保持当前对象的缓存大小和数据大小与copy_obj的完全一致 
         */ 
-        explicit buffer(const buffer &copy_obj) : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0)
+        explicit Buffer(const Buffer &copy_obj) : m_p_buffer(nullptr), m_buffer_size(0), m_data_size(0)
         {
             if (copy_obj.m_p_buffer != nullptr)
             {
@@ -116,7 +115,7 @@ namespace my_module_space
         * 
         * 备注： 移动取值对象的所有资源 
         */ 
-        buffer(buffer &&move_obj) : m_p_buffer(move_obj.m_p_buffer), m_buffer_size(move_obj.m_buffer_size), m_data_size(move_obj.m_data_size)
+        Buffer(Buffer &&move_obj) : m_p_buffer(move_obj.m_p_buffer), m_buffer_size(move_obj.m_buffer_size), m_data_size(move_obj.m_data_size)
         {
             move_obj.m_p_buffer = nullptr;
             move_obj.m_buffer_size = 0;
@@ -126,7 +125,7 @@ namespace my_module_space
         /** 
         * 析构函数 
         */ 
-        ~buffer()
+        ~Buffer()
         {
             destroy();
         }
@@ -140,7 +139,7 @@ namespace my_module_space
         * 
         * 备注： 深拷贝，保持当前对象的缓存大小和数据大小与right_obj的完全一致 
         */ 
-        buffer& operator=(const buffer &right_obj)
+        Buffer& operator=(const Buffer &right_obj)
         {
             if (&right_obj == this)
             {
@@ -182,7 +181,7 @@ namespace my_module_space
         * 
         * 备注： 移动取值对象的所有资源 
         */ 
-        buffer& operator=(buffer &&right_obj)
+        Buffer& operator=(Buffer &&right_obj)
         {
             if (&right_obj != this)
             {
@@ -212,7 +211,7 @@ namespace my_module_space
         *     1. 若缓存能容纳字符串，则直接复制而不改变缓存大小，若不能则扩容复制 
         *     2. 除非非常了解源码，否则不建议使用此赋值函数 
         */ 
-        buffer& operator=(const char *p_str)
+        Buffer& operator=(const char *p_str)
         {
             if (p_str != nullptr)
             {
@@ -224,7 +223,7 @@ namespace my_module_space
                 }
                 else
                 {
-                    if (resize_buffer(str_size))
+                    if (resize(str_size))
                     {
                         memcpy(m_p_buffer, p_str, str_size);
                         m_data_size = str_size;
@@ -314,7 +313,7 @@ namespace my_module_space
         * 
         * 返回值： 缓存容量 
         */ 
-        inline int get_buffer_size() const
+        inline int buffer_size() const
         {
             return m_buffer_size;
         }
@@ -326,7 +325,7 @@ namespace my_module_space
         * 
         * 返回值： 数据大小 
         */ 
-        inline int get_data_size() const
+        inline int data_size() const
         {
             return m_data_size;
         }
@@ -342,7 +341,7 @@ namespace my_module_space
         *     1. 当通过指针直接写入数据时，一般应设置数据大小，若使用copy()、push()、insert()等接口写入数据时，这些接口内部会设置数据大小，无需再调用此接口 
         *     2. 当new_size传递了负值或大于缓存容量的值时，不会进行设置 
         */ 
-        void set_data_size(const int new_size)
+        void data_size(const int new_size)
         {
             if (new_size >= 0 && new_size <= m_buffer_size)
             {
@@ -363,7 +362,7 @@ namespace my_module_space
         *     2. new_size为非正值时，销毁缓存 
         *     3. 当retain_former_data为真，如果new_size小于原来数据的大小，则只截取new_size那部分数据进行保存 
         */ 
-        bool resize_buffer(const int new_size, bool retain_former_data = false)
+        bool resize(const int new_size, bool retain_former_data = false)
         {
             if (new_size <= 0)
             {
@@ -409,22 +408,21 @@ namespace my_module_space
         * 确保缓存大小 
         * 
         * 参数： 
-        *     _size [in] 确保的缓存容量 
+        *     size [in] 确保的缓存容量 
         *     retain_former_data [in] 是否保留原来缓存中数据 
         * 
         * 返回值： true：缓存容量正常，false:缓存容量不足 
         * 
         * 备注： 
-        *     1. 若缓存容量小于_size，则接口内部通过调用resize_buffer()调整缓存 
-        *     2. 若缓存容量不小于_size，则直接返回真 
+        *     1. 若缓存容量小于size，则接口内部通过调用resize()调整缓存 
+        *     2. 若缓存容量不小于size，则直接返回真 
         */ 
-        bool guarantee_buffer_size(const int _size, bool retain_former_data = false)
+        bool ensure(const int size, bool retain_former_data = false)
         {
-            if (m_buffer_size < _size)
+            if (m_buffer_size < size)
             {
-                return resize_buffer(_size, retain_former_data);
+                return resize(size, retain_former_data);
             }
-
             return true;
         }
 
@@ -455,7 +453,7 @@ namespace my_module_space
         * 返回值： 缓存的指针 
         * 
         * 备注： 
-        *     1. 调用此接口后，当前CBuffer对象的缓存指针、缓存容量、数据大小均为0 
+        *     1. 调用此接口后，当前Buffer对象的缓存指针、缓存容量、数据大小均为0 
         *     2. 调用此接口后，缓存的拥有权析出，缓存新的拥有者需要自己维护缓存，释放时使用 my_destroy_array<char>(p)  （p为detach返回的指针） 
         */ 
         char* detach(int *p_buffer_size, int *p_data_size)
@@ -484,7 +482,7 @@ namespace my_module_space
         * 
         * 返回值： 空 
         * 
-        * 备注： 调用此接口后，当前CBuffer对象的缓存指针、缓存容量、数据大小均为0 
+        * 备注： 调用此接口后，当前Buffer对象的缓存指针、缓存容量、数据大小均为0 
         */ 
         void destroy()
         {
@@ -525,7 +523,7 @@ namespace my_module_space
                 return true;
             }
 
-            if (data_size > m_buffer_size && (!auto_resize || !resize_buffer(data_size)))
+            if (data_size > m_buffer_size && (!auto_resize || !resize(data_size)))
             {
                 return false;
             }
@@ -564,7 +562,7 @@ namespace my_module_space
             }
 
             int new_data_size = m_data_size + data_size;
-            if (new_data_size > m_buffer_size && (!auto_resize || !resize_buffer(new_data_size, true)))
+            if (new_data_size > m_buffer_size && (!auto_resize || !resize(new_data_size, true)))
             {
                 return false;
             }
