@@ -75,20 +75,17 @@ namespace my_module_space
         }
 
     public:
-        /// < 判断是否持有对象 
         inline bool empty() const
         {
             return m_up_holder == nullptr;
         }
 
-        /// < 判断类型 
         template<typename U>
         inline bool is() const
         {
             return m_type_index == std::type_index(typeid(U));
         }
 
-        /// < 获取对象 
         template<typename U>
         U& get() const
         {

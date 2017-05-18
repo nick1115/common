@@ -1,5 +1,5 @@
-#ifndef __COMMON_TEST_H_BY_MOUYUN_2017_05_17__
-#define __COMMON_TEST_H_BY_MOUYUN_2017_05_17__
+#ifndef __TEST_PROCESSOR_H_BY_MOUYUN_2017_05_17__
+#define __TEST_PROCESSOR_H_BY_MOUYUN_2017_05_17__
 
 #include <iostream>
 #include <string>
@@ -17,11 +17,15 @@ class TaskSync
 public:
     void increase_finished_count()
     {
+        m_mtx.lock();
+        ++m_task_finished_count;
+        m_mtx.unlock();
     }
+
 private:
     std::mutex m_mtx;
     int m_task_count = 0;
-    int m_task_finished_count = 0;
+    int m_task_finished_count = 0; //atomic_int may be better
 };
 
 class TaskPacket
@@ -77,11 +81,18 @@ public:
 
 private:
     int m_task_id = 1;
-    //std::mutex mtx; //current we only use one thread to gennerate task id 
+    //std::mutex mtx; //currently, we use only one thread to gennerate task id 
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+/****************************************************************************************************
+ there is a pipeline with some processors to simulate the pipeline of real product
+    one processor to generate task id
+    one processor to handle number in task packet
+    three processor to handle text in task packet
+    three processor to print result
 
+we have a thread to generate task packet, note, only task packet, not any task data
+****************************************************************************************************/
 class ProcessorTester
 {
 public:
@@ -106,9 +117,6 @@ public:
         m_number_processor.add_next_processor(&m_text_processor1);
         m_id_processor.add_next_processor(&m_number_processor);
         m_p_first_processor = &m_id_processor; //id_processor is the last processor in pipeline
-
-
-
     }
 
     ~ProcessorTester()

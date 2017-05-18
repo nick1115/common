@@ -10,6 +10,8 @@
 #include "test_object_pool.h"
 #include "test_processor.h"
 
+using namespace my_module_space;
+
 void print_menu()
 {
     std::cout << "menu:" << std::endl 
@@ -22,6 +24,8 @@ void print_menu()
 
 int main()
 {
+    my_module_space::AnyType at(3.14);
+    
     srand((unsigned) time(NULL) * 100);
 
     print_menu();
