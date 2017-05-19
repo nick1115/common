@@ -8,13 +8,13 @@ common是使用C++11编写的一系列基础的业务模块，主要实现了流
 ```
 - common_header     一些通用宏和函数的定义
 - AnyType           弱类型，类似于C#的var
-- Buffer            字节数据存取
-- IoC               依赖反转的C++实现
-- Timer             高精度计时器
-- Event             事件
-- Semphore          信号量
-- ObjectPool        对象池
-- Processor         流水线单元
+- Buffer            字节数据管理,比std::vector<char>更易用
+- IoC               依赖反转的C++实现
+- Timer             高精度计时器，提供s,ms,us,ns多级别的精确计时
+- Event             事件，类似于win event但更易用，没有跨进程能力
+- Semphore          信号量，类似于win semphore但更易用，没有跨进程能力
+- ObjectPool        对象池，`彻底解决C++内存管理问题`，同时提供一定的内存复用能力
+- Processor         流水线单元，流水线架构的基本设施，有效地解决了异步并发与代码维护扩展之间的矛盾
 ```
 
 ## 开发者
