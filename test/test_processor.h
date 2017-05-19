@@ -116,7 +116,7 @@ public:
         m_text_processor1.add_next_processor(&m_text_processor2);
         m_number_processor.add_next_processor(&m_text_processor1);
         m_id_processor.add_next_processor(&m_number_processor);
-        m_p_first_processor = &m_id_processor; //id_processor is the last processor in pipeline
+        m_p_first_processor = &m_id_processor; //id_processor is the first processor in pipeline
     }
 
     ~ProcessorTester()
