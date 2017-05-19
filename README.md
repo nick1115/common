@@ -7,9 +7,9 @@ common是使用C++11编写的一系列通用的基础设施，主要目标是为
 ## 设施列表
 ```
 - common_header     一些通用宏和函数的定义
-- AnyType           弱类型，类似于C#的var
+- AnyType           弱类型，类似于C#的var,转自祁宇的《深入应用C++11:代码优化与工程级应用》
 - Buffer            字节数据管理,比std::vector<char>更易用
-- IoC               依赖反转的C++实现
+- IoC               依赖反转的C++实现,转自祁宇的《深入应用C++11:代码优化与工程级应用》
 - Timer             高精度计时器，提供s,ms,us,ns多级别的精确计时
 - Event             事件，类似于win event但更易用，没有跨进程能力
 - Semphore          信号量，类似于win semphore但更易用，没有跨进程能力
