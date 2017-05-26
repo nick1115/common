@@ -18,7 +18,7 @@ class ObjectPoolTester
 public:
     void test()
     {
-        auto sp = ObjectCreator<Packet>::pop_sp();
+        auto sp = ObjectPool<Packet>::pop_sp();
         sp->id = 1024;
         sp->conf = 3.14;
 
