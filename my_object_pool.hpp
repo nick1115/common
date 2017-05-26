@@ -109,7 +109,7 @@ namespace my_module_space
 
             if (static_cast<int>(m_obj_list.size()) < m_max_holding_count)
             {
-                clear_object(p_obj); /// < using the fucking template meta programming
+                clear_object(p_obj); /// < using the fucking shit template meta programming
                 m_obj_list.push_back(p_obj);
             }
             else
@@ -138,17 +138,96 @@ namespace my_module_space
         }
     };
 
+    template<typename T>
+    class ObjectCreator
+    {
+    public:
+        static inline T* pop()
+        {
+            return m_pool.pop();
+        }
 
-    /// < 请在CPP文件中定义此宏 
-#define DEFINE_OBJECT_POOL(OBJECT_TYPE,POOL_NAME) class POOL_NAME {\
-private:static my_module_space::ObjectPool<OBJECT_TYPE> m_pool;\
-public:static OBJECT_TYPE* pop() { return m_pool.pop(); }\
-public:static void push(OBJECT_TYPE *p_obj) { m_pool.push(p_obj); }\
-public:static std::shared_ptr<OBJECT_TYPE> pop_sp() { return std::shared_ptr<OBJECT_TYPE>(pop(), push);}\
-public:static int get_max_holding_count() { return m_pool.get_max_holding_count(); }\
-public:static void set_max_holding_count(const int _count) { m_pool.set_max_holding_count(_count);}};\
-my_module_space::ObjectPool<OBJECT_TYPE> POOL_NAME::m_pool;
+        static inline void push(T *p)
+        {
+            m_pool.push(p);
+        }
 
+        static inline std::shared_ptr<T> pop_sp()
+        {
+            return std::shared_ptr<T>(pop(), push);
+        }
+
+        static inline int get_max_holding_count()
+        { 
+            return m_pool.get_max_holding_count();
+        }
+        static inline void set_max_holding_count(const int count)
+        {
+            m_pool.set_max_holding_count(count);
+        }
+
+    private:
+        static ObjectPool<T> m_pool;
+    };
+
+    template<typename T> ObjectPool<T> ObjectCreator<T>::m_pool; //this is wonderful 
 }
+
+/*********************************************MESSAGE*********************************************
+For a long time, even now, memory leak in C/C++ code is fucking most of the C/C++ programers, 
+however, smart pointers in C++11 have ended this! But many of them don't know the usage, and still
+programming with the raw pointer. In fact, to master their usage only cost a few hours.
+
+In this hpp file, I have implemented the ObjectPool<T> and the ObjectCreator<T>. These two facilities
+make it eaier to use the std::shared_ptr<T> and provide a few profit of Memory Pool. Now, I'll explain 
+how to used them, it's easy use is unbelievable ^_^
+
+Now, we assume there is a class, it's name is A. Then, in your functions, usage is like this:
+
+#include "my_object_pool.h"
+
+... function(...)
+{
+    ...// other code
+
+    auto a = ObjectCreator<A>::pop_sp(); //directly use, not any explicit declare or define is required
+
+    //the type a is std::shared_ptr<A>, 
+    //if use pop() instead of pop_sp() then a's type is A*
+    
+    if (sp_a == nullptr) //nullptr check is recommended
+    {
+        //handle memory error
+    }
+    else
+    {
+        //now, in this function you have a object of A on the heap, you can program with it without
+        //any care of when and how to delete it
+
+        //if you want to deliver this object to other modules, you should be clear about std::shared_ptr<T>
+    }
+
+    ...//other code
+}
+
+At last, it's recommended to implement a funciton in class A to clear all it's data members, like this:
+
+class A
+{
+    ...//other code
+
+public:
+    void clear()
+    {
+        data1 = 0; //data1's type is integer
+        data2.clear(); //data2 maybe std::vector, std::string...even a custom type who has a void clear()
+        ... //other clear of data members
+    }
+}
+
+Whatever, even there has no clear function in A, ObjectCreator<A> is also available, the clear function 
+just makes the cache mechanism in ObjectPool<T> more safer.
+
+***************************************************************************************************/
 
 #endif
