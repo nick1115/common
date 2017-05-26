@@ -184,7 +184,7 @@ how to used them, it's easy use is unbelievable ^_^
 
 Now, we assume there is a class, it's name is A. Then, in your functions, usage is like this:
 
-#include "my_object_pool.h"
+#include "my_object_pool.hpp"
 
 ... function(...)
 {
