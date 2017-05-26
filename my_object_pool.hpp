@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <list>
 #include <mutex>
+#include <memory>
 
 namespace my_module_space
 {
