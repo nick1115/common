@@ -55,7 +55,7 @@ using namespace my_module_space; //使用空间
 如果在此函数的其他地方或任何其他函数（不限源码文件）中再次使用了ObjectPool<A>::pop_sp()， 
 那么这里还提供了一个非常牛B的特性，那就是所有的这些使用仅会产生一个A的对象池，大家共享之。 
 
-最后，强烈建议在类A中实现一个清理所有成员数据的函数，格式限定为 void clear()，举个栗子： 
+此外，强烈建议在类A中实现一个清理所有成员数据的函数，格式限定为 void clear()，举个栗子： 
 
 class A
 {
@@ -68,12 +68,21 @@ public://最好是public
         data2.clear(); //data2的类型应该是std::vector, std::string或者自定义类型，只要它有void clear()方法 
         ...//其他清理成员数据的代码 
     }
-}
+};
 
 当然，即使A不提供这个void clear()方法也可以照常使用ObjectPool<A>，可以飞上天的模板元编程在编译期会自动 
 判定这个方法是否存在，存在则调用，不存在则忽略。这个方法主要是为了保证复用对象时的安全性（清除垃圾数据）。 
 
+如果使类A派生自ObjectPool，像这样：
+class A : public my_module_space::ObjectPool<A>
+{
+    ...
+};
 
+那么在函数中可以直接这样使用“auto a = A::pop_sp();“， 如此更加优雅，而且ObjectPool<A>::pop_sp()依旧可以使用， 
+二者等效，我们可以自由选择，当然A的对象池仍然是唯一的。  
+
+******************************************下面是英文翻译*****************************************************************
 ****************************my english is poor, so it's only a rough translation ^_^ **********************************
 
 For a long time, even now, memory leak in C/C++ code is fucking most of the C/C++ programers, 
@@ -116,7 +125,7 @@ using namespace my_module_space;
 This function is in one of the source files, if we use ObjectrPool<A>::pop_sp() in other functions of this 
 source file or any others, these functions will share only one object pool of A, and this is we want to get.
 
-At last, it's recommended to implement a funciton in class A to clear all it's data members, like this:
+Besides it's recommended to implement a funciton in class A to clear all it's data members, like this:
 
 class A
 {
@@ -130,12 +139,22 @@ public: //public is recommended
         data2.clear(); //data2 maybe std::vector, std::string...even a custom type who has a void clear()
         ... //other clear of data members
     }
-}
+};
 
 Whatever, even there has no clear function in A, ObjectPool<A> is also available, the clear function 
 just makes the cache mechanism more safer(clean garbage data in object).
 
-***************************************HETE WE GO**********************************************************************/
+If A is derived from ObjectPool, just like this:
+class A : public my_module_space::ObjectPool<A>
+{
+    ...
+};
+
+and in functions we can use it like this "auto a = A::pop_sp();", more graceful. Furthermore, 
+ObjectPool<A>::pop_sp() is also available and it's equal to "A::pop_sp()", we can use both of them as we like.  
+Certainly, the object pool of A is still unique.
+
+*************************************************HETE WE GO************************************************************/
 #ifndef	__MY_OBJECT_POOL_HPP_BY_MOUYUN_2014_10_27__
 #define	__MY_OBJECT_POOL_HPP_BY_MOUYUN_2014_10_27__
 
