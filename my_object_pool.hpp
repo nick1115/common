@@ -17,7 +17,7 @@
 /*********************************************序********************************************************* 
 
 丛远古时代到现在，C/C++的内存泄漏问题干翻了一大票C/C++程序猿，而今C++11的智能指针彻底终结了这种疯狂的杀戮。  
-实际上，掌握智能指针的用法并不难，可是他们中仍有一大批人还在犯2裸奔。  
+尽管掌握智能指针的用法并不难，可他们中还是有一大批人仍在犯2裸奔。  
 
 这个文件实现了ObjectPool<T>，这个设施极大简化了std::shared_ptr<T>的使用以及对象的复用，下面将展示如何使用， 
 简单得不要不要的...... 
@@ -25,6 +25,8 @@
 现在我们假设有一个类A（一般应该是纯数据类），在某个函数中我们需要用A的对象实现业务逻辑，那么应该这样使用： 
 
 #include "my_object_pool.hpp" //在函数所在的源文件中包含这个头文件 
+
+using namespace my_module_space; //使用空间 
 
 ... function(...)
 {
@@ -58,25 +60,25 @@
 class A
 {
     ...//其他代码 
-public:
+public://最好是public 
     void clear()
     {
         data1 = 0; //data1的类型应该是整型 
-        memset(p, 0, size); //p的应该是一个大小为size字节的缓存 
+        memset(p, 0, size); //p应该指向一个大小为size字节的缓存 
         data2.clear(); //data2的类型应该是std::vector, std::string或者自定义类型，只要它有void clear()方法 
         ...//其他清理成员数据的代码 
     }
 }
 
-当然，即使A不提供这个void clear()方法也可以照常使用ObjectPool<A>，可以飞上天的模板元编程会自动判定这个方法
-是否存在，存在则调用，不存在则忽略。这个方法主要是为了保证在复用对象时的安全性（清除垃圾数据）。 
+当然，即使A不提供这个void clear()方法也可以照常使用ObjectPool<A>，可以飞上天的模板元编程在编译期会自动 
+判定这个方法是否存在，存在则调用，不存在则忽略。这个方法主要是为了保证复用对象时的安全性（清除垃圾数据）。 
 
 
 ****************************my english is poor, so it's only a rough translation ^_^ **********************************
 
 For a long time, even now, memory leak in C/C++ code is fucking most of the C/C++ programers, 
 however, smart pointers in C++11 have ended this! But many of them don't know the usage, and still
-programming with the raw pointer. In fact, to master their usage only cost a few hours.
+programming with the raw pointer. Although, to master their usage only cost a few hours.
 
 This file has implemented the ObjectPool<T>. This facility makes it eaier to use the std::shared_ptr<T> and object reuse, 
 now, I'll explain how to used them, it's easy use is unbelievable ^_^
@@ -84,6 +86,8 @@ now, I'll explain how to used them, it's easy use is unbelievable ^_^
 Now, we assume there is a class, it's name is A. Then, in your functions, usage is like this:
 
 #include "my_object_pool.hpp"
+
+using namespace my_module_space;
 
 ... function(...)
 {
@@ -118,7 +122,7 @@ class A
 {
     ...//other code
 
-public:
+public: //public is recommended
     void clear()
     {
         data1 = 0; //data1's type is integer
