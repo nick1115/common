@@ -7,7 +7,7 @@ namespace my_module_space
     class LockFreeSingleton
     {
     public:
-        static T* get_instance()
+        inline static T* get_instance()
         {
             if (m_p_T == nullptr)
             {
