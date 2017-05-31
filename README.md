@@ -7,6 +7,7 @@ common是使用C++11编写的一系列通用的基础设施，主要目标是为
 ## 设施列表
 ```
 - common_header     一些通用宏和函数的定义
+- Singleton         单例，更易用的单例
 - Buffer            字节数据管理,比std::vector<char>更易用
 - Timer             高精度计时器，提供s,ms,us,ns多级别的精确计时
 - Event             事件，类似于win event但更易用，没有跨进程能力
