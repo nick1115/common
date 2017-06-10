@@ -1,3 +1,18 @@
+/*********************************************************** 
+* Date: 2016-06-23 
+* 
+* Author: 牟韵 
+* 
+* Email: mouyun1115@163.com 
+* 
+* Module: 单例 
+* 
+* Brief: 
+* 
+* Note: 无锁 
+* 
+* CodePage: Pure UTF-8 
+************************************************************/ 
 #ifndef __MY_SINGLETON_HPP_BY_MOUYUN_2017_05_31__
 #define __MY_SINGLETON_HPP_BY_MOUYUN_2017_05_31__
 
