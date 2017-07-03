@@ -87,10 +87,16 @@ namespace my_module_space
     class Processor
     {
         using TASK_FUNCTION = std::function<void(std::shared_ptr<T>&)>;
+		using TIMEOUT_FUNCTION = std::function<void()>;
 
     public:
-        Processor(TASK_FUNCTION f = nullptr, const int task_max_count = 1024, const int thread_max_count = 1024) : 
-            m_task_function(f),
+        Processor(TASK_FUNCTION task_f = nullptr, 
+				TIMEOUT_FUNCTION timeout_f = nullptr, 
+				const int thread_time_out_ms = 200, 
+				const int task_max_count = 1024, 
+				const int thread_max_count = 1024) : 
+            m_task_function(task_f), 
+			m_timeout_function(timeout_f), 
             m_task_max_count(task_max_count),
             m_thread_max_count(thread_max_count)
         {
@@ -106,13 +112,15 @@ namespace my_module_space
         std::list<std::shared_ptr<T> > m_task_list;
         std::mutex m_task_lock;
         Semphore m_task_semphore;
-        volatile int m_task_max_count;
+        volatile int m_task_max_count = 1024;
 
         std::list<SP_THREAD_WRAPPER> m_thread_list;
         std::mutex m_thread_lock;
-        volatile int m_thread_max_count;
+        volatile int m_thread_max_count = 1024;
+		volatile int m_thread_timeout_ms = 200;
 
         TASK_FUNCTION m_task_function;
+		TIMEOUT_FUNCTION m_timeout_function;
 
         std::list<Processor<T>*> m_next_processors;
 
@@ -152,10 +160,28 @@ namespace my_module_space
         }
 
     public:
+		inline void set_thread_timeout(const int timeout_ms)
+		{
+			m_thread_timeout_ms = timeout_ms;
+		}
+
+		inline void set_queue_max_count(const int max_count)
+		{
+			m_task_max_count = max_count;
+		}
+		inline int get_queue_max_count() const
+		{
+			return m_task_max_count;
+		}
+
         inline void set_task_function(TASK_FUNCTION f)
         {
             m_task_function = f;
         }
+		inline void set_timeout_function(TIMEOUT_FUNCTION f)
+		{
+			m_timeout_function = f;
+		}
 
         int add_next_processor(Processor<T> *p_processor) /// < current, it's not thread safe 
         {
@@ -177,7 +203,6 @@ namespace my_module_space
 
             return PROCESSOR_SUCCESS;
         }
-
         int remove_next_processor(Processor<T> *p_processor) /// < current, it's not thread safe 
         {
             for (auto itr = m_next_processors.begin(); itr != m_next_processors.end(); ++itr)
@@ -193,7 +218,6 @@ namespace my_module_space
         }
 
     public:
-
         int begin_thread(const int count = 1)
         {
             if (count <= 0)
@@ -234,7 +258,7 @@ namespace my_module_space
 
                         while (true)
                         {
-                            result = get_task(sp_task, 200);
+                            result = get_task(sp_task, this->m_thread_timeout_ms);
                             if (sp_thread_wrapper->is_thread_quit())
                             {
                                 break;
@@ -242,7 +266,10 @@ namespace my_module_space
 
                             if (result == PROCESSOR_SUCCESS)
                             {
-                                m_task_function(sp_task);
+								if (m_task_function != nullptr)
+								{
+									m_task_function(sp_task);
+								}
 
                                 /// < push task to next processors 
                                 for (auto &cur_processor : this->m_next_processors)
@@ -250,9 +277,16 @@ namespace my_module_space
                                     cur_processor->put_task(sp_task);
                                 }
                             }
+							else if (result == PROCESSOR_TIME_OUT)
+							{
+								if (m_timeout_function != nullptr)
+								{
+									m_timeout_function();
+								}
+							}
                             else
                             {
-                                /// < time out | queue empty, ignore these 
+                                /// < queue empty, ignore it 
                             }
                         }
 
@@ -396,14 +430,7 @@ namespace my_module_space
             return PROCESSOR_SUCCESS;
         }
 
-        inline void set_queue_max_count(const int max_count)
-        {
-            m_task_max_count = max_count;
-        }
-        inline int get_queue_max_count() const
-        {
-            return m_task_max_count;
-        }
+
     };
 }
 
