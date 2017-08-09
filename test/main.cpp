@@ -26,8 +26,12 @@ int main()
     print_menu();
 
     ProcessorTester processor_tester;
+    ProcessorTester1 processor_tester1;
+
     BufferTester buffer_tester;
+
     ObjectPoolTester object_pool_tester;
+
     SingletonTester singleton_tester;
 
     int cmd = 0;
@@ -42,8 +46,10 @@ int main()
             break;
         case 1:
             processor_tester.begin_test();
+            processor_tester1.begin_test();
             break;
         case 2:
+            processor_tester1.stop_test();
             processor_tester.stop_test();
             break;
         case 3:

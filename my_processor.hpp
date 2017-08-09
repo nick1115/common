@@ -33,7 +33,7 @@ namespace my_module_space
 
     class ThreadWrapper
     {
-        template<typename T> friend class Processor;
+        template<typename PACKET> friend class Processor;
     public:
         ThreadWrapper() : m_sp_thread(nullptr), m_init_flag(0), m_quit_flag(0) {}
         ~ThreadWrapper()
@@ -83,33 +83,33 @@ namespace my_module_space
         PROCESSOR_QUEUE_EMPTY = 3
     };
 
-    template<typename T>
+    template<typename PACKET>
     class Processor
     {
-        using TASK_FUNCTION = std::function<void(std::shared_ptr<T>&)>;
-		using TIMEOUT_FUNCTION = std::function<void()>;
+        using TASK_FUNCTION = std::function<void(std::shared_ptr<PACKET>&)>;
+		using OTHER_FUNCTION = std::function<void(int)>;
 
     public:
-        Processor(TASK_FUNCTION task_f = nullptr, 
-				TIMEOUT_FUNCTION timeout_f = nullptr, 
-				const int thread_time_out_ms = 200, 
+        Processor(const int thread_time_out_ms = 200, 
 				const int task_max_count = 1024, 
-				const int thread_max_count = 1024) : 
+				const int thread_max_count = 1024, 
+                TASK_FUNCTION task_f = nullptr, 
+                OTHER_FUNCTION other_f = nullptr) : 
             m_task_function(task_f), 
-			m_timeout_function(timeout_f), 
-            m_task_max_count(task_max_count),
+			m_other_function(other_f), 
+            m_task_max_count(task_max_count), 
             m_thread_max_count(thread_max_count)
         {
         }
 
-        ~Processor() {end_all_threads();}
+        virtual ~Processor() { end_all_threads(); }
 
     private:
         Processor(const Processor&) = delete;
         Processor& operator=(const Processor&) = delete;
 
-    private:
-        std::list<std::shared_ptr<T> > m_task_list;
+    protected:
+        std::list<std::shared_ptr<PACKET> > m_task_list;
         std::mutex m_task_lock;
         Semphore m_task_semphore;
         volatile int m_task_max_count = 1024;
@@ -119,10 +119,10 @@ namespace my_module_space
         volatile int m_thread_max_count = 1024;
 		volatile int m_thread_timeout_ms = 200;
 
-        TASK_FUNCTION m_task_function;
-		TIMEOUT_FUNCTION m_timeout_function;
+        TASK_FUNCTION m_task_function = nullptr;
+		OTHER_FUNCTION m_other_function = nullptr;
 
-        std::list<Processor<T>*> m_next_processors;
+        std::list<Processor<PACKET>*> m_next_processors;
 
     private:
         void remove_thread_wrapper(const SP_THREAD_WRAPPER &sp_thread_wrapper)
@@ -178,12 +178,12 @@ namespace my_module_space
         {
             m_task_function = f;
         }
-		inline void set_timeout_function(TIMEOUT_FUNCTION f)
+		inline void set_timeout_function(OTHER_FUNCTION f)
 		{
-			m_timeout_function = f;
+			m_other_function = f;
 		}
 
-        int add_next_processor(Processor<T> *p_processor) /// < current, it's not thread safe 
+        int add_next_processor(Processor<PACKET> *p_processor) /// < current, it's not thread safe 
         {
             if (p_processor == nullptr)
             {
@@ -203,7 +203,7 @@ namespace my_module_space
 
             return PROCESSOR_SUCCESS;
         }
-        int remove_next_processor(Processor<T> *p_processor) /// < current, it's not thread safe 
+        int remove_next_processor(Processor<PACKET> *p_processor) /// < current, it's not thread safe 
         {
             for (auto itr = m_next_processors.begin(); itr != m_next_processors.end(); ++itr)
             {
@@ -216,6 +216,10 @@ namespace my_module_space
 
             return PROCESSOR_FAIL;
         }
+
+    protected:
+        virtual void handle_task(std::shared_ptr<PACKET> &sp_task) {}
+        virtual void handle_other_status(int status) {}
 
     public:
         int begin_thread(const int count = 1)
@@ -253,23 +257,25 @@ namespace my_module_space
                             std::this_thread::yield();
                         }
 
-                        std::shared_ptr<T> sp_task(nullptr);
-                        int result = 0;
+                        std::shared_ptr<PACKET> sp_task(nullptr);
+                        int status = 0;
 
                         while (true)
                         {
-                            result = get_task(sp_task, this->m_thread_timeout_ms);
+                            status = get_task(sp_task, this->m_thread_timeout_ms);
                             if (sp_thread_wrapper->is_thread_quit())
                             {
                                 break;
                             }
 
-                            if (result == PROCESSOR_SUCCESS)
+                            if (status == PROCESSOR_SUCCESS)
                             {
 								if (m_task_function != nullptr)
 								{
 									m_task_function(sp_task);
 								}
+
+                                handle_task(sp_task);
 
                                 /// < push task to next processors 
                                 for (auto &cur_processor : this->m_next_processors)
@@ -277,16 +283,14 @@ namespace my_module_space
                                     cur_processor->put_task(sp_task);
                                 }
                             }
-							else if (result == PROCESSOR_TIME_OUT)
-							{
-								if (m_timeout_function != nullptr)
-								{
-									m_timeout_function();
-								}
-							}
                             else
                             {
-                                /// < queue empty, ignore it 
+                                if (m_other_function != nullptr)
+                                {
+                                    m_other_function(status);
+                                }
+
+                                handle_other_status(status);
                             }
                         }
 
@@ -372,7 +376,7 @@ namespace my_module_space
             }
         }
 
-        int put_task(std::shared_ptr<T> &sp_task, int *p_new_size = nullptr)
+        int put_task(std::shared_ptr<PACKET> &sp_task, int *p_new_size = nullptr)
         {
             std::lock_guard<std::mutex> auto_lock(m_task_lock);
 
@@ -397,7 +401,7 @@ namespace my_module_space
             return PROCESSOR_SUCCESS;
         }
 
-        int get_task(std::shared_ptr<T> &sp_task, const int ms = (-1), int *p_new_size = nullptr)
+        int get_task(std::shared_ptr<PACKET> &sp_task, const int ms = (-1), int *p_new_size = nullptr)
         {
             if (m_task_semphore.wait(ms) != SEMPHORE_SUCCESS)
             {
@@ -429,8 +433,6 @@ namespace my_module_space
 
             return PROCESSOR_SUCCESS;
         }
-
-
     };
 }
 

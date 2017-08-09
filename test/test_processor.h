@@ -204,6 +204,80 @@ private:
 };
 
 
+class ProcessorTester1 : public Processor<TaskPacket>
+{
+public:
+    ProcessorTester1() {}
+    virtual ~ProcessorTester1() {}
+
+public:
+    void begin_test()
+    {
+        begin_thread(1);
+
+        m_generator = std::make_shared<std::thread>([this]()
+        {
+            while (1)
+            {
+                if (this->m_thread_stop != 0)
+                {
+                    break;
+                }
+
+                auto sp_task(std::make_shared<TaskPacket>());
+                sp_task->m_id = m_id++;
+                sp_task->m_number = m_number++;
+                sp_task->m_text = "hello world";
+                this->put_task(sp_task);
+
+                thread_sleep_ms(600);
+            }
+        });
+    }
+
+    void stop_test()
+    {
+        if (m_generator != nullptr && m_generator->joinable())
+        {
+            m_thread_stop = 1;
+            m_generator->join();
+            m_generator.reset();
+            m_thread_stop = 0;
+        }
+
+        end_all_threads();
+    }
+
+protected:
+    virtual void handle_task(std::shared_ptr<TaskPacket> &sp_task)
+    {
+        std::cout << "ProcessorTester1 print task :" 
+                << " id " << sp_task->m_id 
+                << " number " << sp_task->m_number 
+                << " text " << sp_task->m_text << std::endl;
+    }
+
+    virtual void handle_other_status(int status)
+    {
+        if (status == PROCESSOR_TIME_OUT)
+        {
+            std::cout << "ProcessorTester1 : time out" << std::endl;
+        }
+        else
+        {
+            std::cout << "ProcessorTester1 : unknown status " << status << std::endl;
+        }
+    }
+
+private:
+    std::shared_ptr<std::thread> m_generator;
+    int m_thread_stop = 0;
+
+    int m_id = 0;
+    int m_number = 128;
+};
+
+
 
 
 #endif
