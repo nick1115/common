@@ -87,16 +87,16 @@ namespace my_module_space
     class Processor
     {
         using TASK_FUNCTION = std::function<void(std::shared_ptr<PACKET>&)>;
-		using OTHER_FUNCTION = std::function<void(int)>;
+        using OTHER_FUNCTION = std::function<void(int)>;
 
     public:
         Processor(const int thread_time_out_ms = 200, 
-				const int task_max_count = 1024, 
-				const int thread_max_count = 1024, 
+                const int task_max_count = 1024, 
+                const int thread_max_count = 1024, 
                 TASK_FUNCTION task_f = nullptr, 
                 OTHER_FUNCTION other_f = nullptr) : 
             m_task_function(task_f), 
-			m_other_function(other_f), 
+            m_other_function(other_f), 
             m_task_max_count(task_max_count), 
             m_thread_max_count(thread_max_count)
         {
@@ -117,10 +117,10 @@ namespace my_module_space
         std::list<SP_THREAD_WRAPPER> m_thread_list;
         std::mutex m_thread_lock;
         volatile int m_thread_max_count = 1024;
-		volatile int m_thread_timeout_ms = 200;
+        volatile int m_thread_timeout_ms = 200;
 
         TASK_FUNCTION m_task_function = nullptr;
-		OTHER_FUNCTION m_other_function = nullptr;
+        OTHER_FUNCTION m_other_function = nullptr;
 
         std::list<Processor<PACKET>*> m_next_processors;
 
@@ -160,28 +160,28 @@ namespace my_module_space
         }
 
     public:
-		inline void set_thread_timeout(const int timeout_ms)
-		{
-			m_thread_timeout_ms = timeout_ms;
-		}
+        inline void set_thread_timeout(const int timeout_ms)
+        {
+            m_thread_timeout_ms = timeout_ms;
+        }
 
-		inline void set_queue_max_count(const int max_count)
-		{
-			m_task_max_count = max_count;
-		}
-		inline int get_queue_max_count() const
-		{
-			return m_task_max_count;
-		}
+        inline void set_queue_max_count(const int max_count)
+        {
+            m_task_max_count = max_count;
+        }
+        inline int get_queue_max_count() const
+        {
+            return m_task_max_count;
+        }
 
         inline void set_task_function(TASK_FUNCTION f)
         {
             m_task_function = f;
         }
-		inline void set_timeout_function(OTHER_FUNCTION f)
-		{
-			m_other_function = f;
-		}
+        inline void set_timeout_function(OTHER_FUNCTION f)
+        {
+            m_other_function = f;
+        }
 
         int add_next_processor(Processor<PACKET> *p_processor) /// < current, it's not thread safe 
         {
@@ -270,10 +270,10 @@ namespace my_module_space
 
                             if (status == PROCESSOR_SUCCESS)
                             {
-								if (m_task_function != nullptr)
-								{
-									m_task_function(sp_task);
-								}
+                                if (m_task_function != nullptr)
+                                {
+                                    m_task_function(sp_task);
+                                }
 
                                 handle_task(sp_task);
 
