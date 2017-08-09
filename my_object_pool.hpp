@@ -17,7 +17,7 @@
 /*********************************************序********************************************************* 
 
 丛远古时代到现在，C/C++的内存泄漏问题干翻了一大票C/C++程序猿，而今C++11的智能指针彻底终结了这种疯狂的杀戮。  
-尽管掌握智能指针的用法并不难，可他们中还是有一大批人仍在犯2裸奔。  
+尽管掌握智能指针的用法并不难，可这之中还是有一大批人仍在裸奔。  
 
 这个文件实现了ObjectPool<T>，这个设施极大简化了std::shared_ptr<T>的使用以及对象的复用，下面将展示如何使用， 
 简单得不要不要的...... 
@@ -81,78 +81,6 @@ class A : public my_module_space::ObjectPool<A>
 
 那么在函数中可以直接这样使用“auto a = A::pop_sp();“， 如此更加优雅，而且ObjectPool<A>::pop_sp()依旧可以使用， 
 二者等效，我们可以自由选择，当然A的对象池仍然是唯一的。  
-
-******************************************下面是英文翻译*****************************************************************
-****************************my english is poor, so it's only a rough translation ^_^ **********************************
-
-For a long time, even now, memory leak in C/C++ code is fucking most of the C/C++ programers, 
-however, smart pointers in C++11 have ended this! But many of them don't know the usage, and still
-programming with the raw pointer. Although, to master their usage only cost a few hours.
-
-This file has implemented the ObjectPool<T>. This facility makes it eaier to use the std::shared_ptr<T> and object reuse, 
-now, I'll explain how to used them, it's easy use is unbelievable ^_^
-
-Now, we assume there is a class, it's name is A. Then, in your functions, usage is like this:
-
-#include "my_object_pool.hpp"
-
-using namespace my_module_space;
-
-... function(...)
-{
-    ...// other code
-
-    auto a = ObjectPool<A>::pop_sp(); //directly use it, not any requirements for explicit declare or define
-
-    //the type of a is std::shared_ptr<A>, 
-    //if use pop() instead of pop_sp() then a's type is A*
-    
-    if (a == nullptr) //nullptr check is recommended
-    {
-        //handle memory error
-    }
-    else
-    {
-        //now, in this function you have a object of A on the heap, you can program with it without
-        //any care of when and how to delete it
-
-        //if you want to deliver this object to any other functions, you should be clear about std::shared_ptr<T>
-    }
-
-    ...//other code
-}
-
-This function is in one of the source files, if we use ObjectrPool<A>::pop_sp() in other functions of this 
-source file or any others, these functions will share only one object pool of A, and this is we want to get.
-
-Besides it's recommended to implement a funciton in class A to clear all it's data members, like this:
-
-class A
-{
-    ...//other code
-
-public: //public is recommended
-    void clear()
-    {
-        data1 = 0; //data1's type is integer
-        memset(p, 0, size) //p is a buffer with size bytes
-        data2.clear(); //data2 maybe std::vector, std::string...even a custom type who has a void clear()
-        ... //other clear of data members
-    }
-};
-
-Whatever, even there has no clear function in A, ObjectPool<A> is also available, the clear function 
-just makes the cache mechanism more safer(clean garbage data in object).
-
-If A is derived from ObjectPool, just like this:
-class A : public my_module_space::ObjectPool<A>
-{
-    ...
-};
-
-and in functions we can use it like this "auto a = A::pop_sp();", more graceful. Furthermore, 
-ObjectPool<A>::pop_sp() is also available and it's equal to "A::pop_sp()", we can use both of them as we like.  
-Certainly, the object pool of A is still unique.
 
 *************************************************HETE WE GO************************************************************/
 #ifndef	__MY_OBJECT_POOL_HPP_BY_MOUYUN_2014_10_27__
