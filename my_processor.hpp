@@ -97,6 +97,7 @@ namespace my_module_space
                 OTHER_FUNCTION other_f = nullptr) : 
             m_task_function(task_f), 
             m_other_function(other_f), 
+            m_thread_timeout_ms(thread_time_out_ms),
             m_task_max_count(task_max_count), 
             m_thread_max_count(thread_max_count)
         {
